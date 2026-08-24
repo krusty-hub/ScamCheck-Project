@@ -182,6 +182,9 @@ if is_clicked:
 
 # 6. Footer
 st.divider()
+
+st.write("2026 version")
+
 st.caption(
     "🔒 **ScamCheck Engine v1.0** — Rule-Based Detection | Built by the SIWES Python Engineering Team"
 )
