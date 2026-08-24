@@ -48,7 +48,7 @@ def check_valid_bank_url(url: str) -> tuple[int, Optional[str]]:#Fix this
     points = 0
     reason_string = None
     
-    banks = {"gtbank" : "gtbank.com", "gtb" : "gtbank", "accessbank" : "accessbankplc.com"}#add more
+    banks = {"gtbank" : "gtbank.com", "gtb" : "gtbank.com", "accessbank" : "accessbankplc.com"}#add more
     
     parsed_url = urlparse(url)
     hostname = parsed_url.hostname
