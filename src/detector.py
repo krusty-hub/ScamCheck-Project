@@ -243,6 +243,10 @@ def check_suspicious_links(text: str) -> tuple[int, list[str]]:
         points, reason_string = url_utils.check_redirect_parameters(url)
         url_points += points
         url_reasons_list.append(reason_string)
+
+        points, reason_string = url_utils.check_malformed_query(url)
+        url_points += points
+        url_reasons_list.append(reason_string)
         
         url_reasons_list = [reason for reason in url_reasons_list if reason is not None] #Removes None
         
