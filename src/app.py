@@ -39,6 +39,7 @@ st.markdown("""
         border-color: #3b82f6 !important;
         box-shadow: 0 0 0 1px #3b82f6 !important;
     }
+        
 
     /* Custom Primary Button Styling */
     div.stButton > button {
@@ -74,6 +75,37 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+def show_warning_yellow(message):
+    st.markdown(
+        f"""
+        <div style="
+            background-color: #e6e84f;
+            color: #543737;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+        ">
+            ⚠️ {message}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+def show_warning_red(message):
+        st.markdown(
+        f"""
+        <div style="
+            background-color: #b52121;
+            color: #debdbd;
+            padding: 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+        ">
+            💀 {message}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 # 3. App Header
 st.title("🛡️ ScamCheck")
 st.caption("Enterprise Message Safety & Phishing Detector")
@@ -118,12 +150,12 @@ if is_clicked:
             },
             "YELLOW": {
                 "label": "Medium Risk",
-                "banner": st.warning,
+                "banner": show_warning_yellow,
                 "msg": "Suspicious elements detected. Proceed with caution."
             },
             "RED": {
                 "label": "High Risk / Danger",
-                "banner": st.error,
+                "banner": show_warning_red,
                 "msg": "Critical risk indicators detected! Do not click links or share details."
             }
         }
@@ -153,3 +185,4 @@ st.divider()
 st.caption(
     "🔒 **ScamCheck Engine v1.0** — Rule-Based Detection | Built by the SIWES Python Engineering Team"
 )
+
