@@ -43,7 +43,7 @@ order, since some make others easier to verify:
    instead of `keyword in text`, for every keyword-list check across
    `detector.py`. This is a bigger fix than it sounds like — it touches
    ~8 functions — but it's the same pattern repeated, so once you fix
-   one you can apply the same fix everywhere.
+   one you can apply the same fix everywhere.(FIXED)
 
 2. **Bank-lookalike dictionary bug.** The `banks` dict in
    `check_valid_bank_url()` has a `"gtb": "gtbank"` entry where the value
@@ -54,7 +54,7 @@ order, since some make others easier to verify:
    # -> (3, "Possible bank lookalike domain")  <- false positive on a REAL bank URL
    ```
    You've already started fixing this — worth double-checking the fix
-   against this exact test case once it's in.
+   against this exact test case once it's in.(FIXED)
 
 3. **Generic reason strings.** `check_urgency_language()`,
    `check_pin_otp_request()`, and `check_generic_greeting()` build a
@@ -63,14 +63,14 @@ order, since some make others easier to verify:
    Detected" instead of naming the actual phrase found. Fix: work the
    detected-phrase list into the actual reason string so the "why did it
    flag this" explanation is specific, not generic. This matters for the
-   evaluation criterion about explaining your own logic clearly.
+   evaluation criterion about explaining your own logic clearly.(FIXED)
 
 4. **FN03 is still an open case.** `http://unichemlabs.com/index.php?8b9sol`
    still scores 0 — it's a different pattern from the other three (a
    compromised legitimate small-business site with a short, malformed
    query string instead of proper key=value pairs). This is a good one to
    think through as a team before deciding whether it's worth a dedicated
-   check or an acceptable gap for v1.
+   check or an acceptable gap for v1.(FIXED)
 
 ## Full project roadmap from here
 
