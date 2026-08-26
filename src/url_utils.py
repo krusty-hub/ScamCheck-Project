@@ -43,33 +43,89 @@ def check_ipaddress(url: str) -> tuple[int, Optional[str]]:
     
     return (points, reason_string)
 
-def check_valid_bank_url(url: str) -> tuple[int, Optional[str]]:#Fix this
+def check_valid_bank_url(url: str) -> tuple[int, Optional[str]]:
     BANK_LOOKALIKE_POINTS = 3
-    points = 0
-    reason_string = None
-    
-    banks = {"gtbank" : "gtbank.com", "gtb" : "gtbank.com", "accessbank" : "accessbankplc.com"}#add more
-    
+
+    # Bank identifiers mapped to their official domains.
+    # Add new banks here as the project expands.
+    banks = {
+        "accessbank": ["accessbankplc.com"],
+        "access": ["accessbankplc.com"],
+
+        "gtbank": ["gtbank.com"],
+        "gtb": ["gtbank.com"],
+
+        "zenith": ["zenithbank.com"],
+
+        "firstbank": ["firstbanknigeria.com"],
+        "first bank": ["firstbanknigeria.com"],
+
+        "uba": ["ubagroup.com"],
+
+        "opay": ["opayweb.com"],
+
+        "kuda": ["kuda.com"],
+
+        "moniepoint": ["moniepoint.com"],
+
+        "sterling": ["sterling.ng"],
+
+        "wema": ["wemabank.com"],
+
+        "fidelity": ["fidelitybank.ng"],
+
+        "unionbank": ["unionbankng.com"],
+        "union bank": ["unionbankng.com"],
+
+        "stanbic": ["stanbicibtcbank.com"],
+
+        "polaris": ["polarisbanklimited.com"],
+
+        "fcmb": ["fcmb.com"],
+    }
+
     parsed_url = urlparse(url)
     hostname = parsed_url.hostname
-    username = parsed_url.username
-    
-    if looks_like_bank(hostname, banks) or looks_like_bank(username, banks):
-        points = BANK_LOOKALIKE_POINTS
-        reason_string = "Possible bank lookalike domain"
-        
-    return(points, reason_string)    
-def looks_like_bank(candidate: str | None, banks: dict[str, str]) -> bool:
-    if candidate is None:
-        return False
-    for bank_name, real_domain in banks.items():
-        if bank_name in candidate:
-            if(
-                candidate != real_domain and
-                not candidate.endswith("." + real_domain)    
-            ):
-                return True
-    return False    
+
+    # No hostname means there is no domain to inspect.
+    if hostname is None:
+        return (0, None)
+
+    hostname = hostname.lower().rstrip(".")
+
+    if looks_like_bank(hostname, banks):
+        return (
+            BANK_LOOKALIKE_POINTS,
+            "Possible bank lookalike domain"
+        )
+
+    return (0, None)
+
+
+def looks_like_bank(
+    hostname: str,
+    banks: dict[str, list[str]]
+) -> bool:
+    hostname = hostname.lower()
+
+    for bank_name, official_domains in banks.items():
+
+        # Does the hostname contain a bank identifier?
+        if bank_name in hostname:
+
+            # Check whether it is an official domain or subdomain
+            for official_domain in official_domains:
+
+                if (
+                    hostname == official_domain
+                    or hostname.endswith("." + official_domain)
+                ):
+                    return False
+
+            # It mentions the bank but is not an official domain.
+            return True
+
+    return False
                 
                 
 def check_suspicious_language(url: str) -> tuple[int, Optional[str]]:
