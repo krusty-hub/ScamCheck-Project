@@ -137,7 +137,7 @@ def check_urgency_language(text: str) -> tuple[int, Optional[str]]:
     
     total_points = 0
     reason_string = None
-   urgency_phrases_detected = []
+    urgency_phrases_detected = []
     
     for urgency_phrase in urgency_phrases:
         if re.search(rf"\b{re.escape(urgency_phrase)}\b", text):
@@ -168,7 +168,7 @@ def check_pin_otp_request(text: str) -> tuple[int, Optional[str]]:
     
     total_points = 0
     reason_string = None
-   sensitive_keywords_detected = [] 
+    sensitive_keywords_detected = [] 
     
     for keyword in sensitive_keywords:
         if re.search(rf"\b{re.escape(keyword)}\b", text):
