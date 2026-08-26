@@ -12,6 +12,7 @@ all of them and combines the results into a final risk score.
 
 from typing import TypedDict, Optional
 import url_utils
+import re
 
 class RiskResult(TypedDict):
     score: int            # 0-100, higher = more suspicious
@@ -139,7 +140,7 @@ def check_urgency_language(text: str) -> tuple[int, Optional[str]]:
     urgency_phrases_detected = ["No Urgency Phrase Detected"]#added urgency_phrases_detected to account for all urgency phrases detected
     
     for urgency_phrase in urgency_phrases:
-        if urgency_phrase in text:
+        if re.search(rf"\b{re.escape(urgency_phrase)}\b", text):
             if "No Urgency Phrase Detected" in urgency_phrases_detected:
                 urgency_phrases_detected.remove("No Urgency Phrase Detected")
             total_points += URGENCY_LANGUAGE_POINT
@@ -169,7 +170,7 @@ def check_pin_otp_request(text: str) -> tuple[int, Optional[str]]:
     sensitive_keywords_detected = ["No Request for any sensitive credential"]#added sensitive_keywords_detected to acount for all sensitive credential keyword detected
     
     for keyword in sensitive_keywords:
-        if keyword in text:
+        if re.search(rf"\b{re.escape(keyword)}\b", text):
             if "No Request for any sensitive credential" in sensitive_keywords_detected:
                 sensitive_keywords_detected.remove("No Request for any sensitive credential")
             total_points += SENSITIVE_SECURITY_KEYWORD_POINT
@@ -272,7 +273,7 @@ def check_generic_greeting(text: str) -> tuple[int, Optional[str]]:
     generic_greetings_detected = ["No Generic Greeting Detected"]#added generic_greetings_detected to account for all generic keywords detected in text
     
     for greeting in generic_greetings:
-        if greeting in text:
+        if re.search(rf"\b{re.escape(greeting)}\b", text):
             if "No Generic Greeting Detected" in generic_greetings_detected:
                 generic_greetings_detected.remove("No Generic Greeting Detected")
             total_points += GENERIC_GREETING_POINT
@@ -316,7 +317,7 @@ def check_money_request(text: str) -> tuple[int, Optional[str]]:
     ]
     
     for phrase in money_request_phrases:
-        if phrase in text:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += MONEY_REQUEST_POINTS
             reason_string = "The message asks you to send, transfer, or pay money."
         
@@ -351,7 +352,7 @@ def check_prize_or_reward(text: str) -> tuple[int, Optional[str]]:
     ]
     
     for phrase in prize_reward_phrases:
-        if phrase in text:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += PRIZE_REWARD_POINTS
             reason_string = "The message claims you have won a prize or reward."
     
@@ -384,7 +385,7 @@ def check_threats_or_consequences(text: str) -> tuple[int, Optional[str]]:
     ]
     
     for phrase in threat_phrases:
-        if phrase in text:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += THREAT_POINTS
             reason_string = "The message contains threats or warnings about negative consequences."
             
@@ -410,7 +411,7 @@ def check_personal_information_request(text: str) -> tuple[int, Optional[str]]:
     ]
     
     for phrase in personal_info_phrases:
-        if phrase in text:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += PERSONAL_INFO_POINTS
             reason_string = "The message asks for personal or identifying information."
             
