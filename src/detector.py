@@ -137,15 +137,16 @@ def check_urgency_language(text: str) -> tuple[int, Optional[str]]:
     
     total_points = 0
     reason_string = None
-    urgency_phrases_detected = ["No Urgency Phrase Detected"]#added urgency_phrases_detected to account for all urgency phrases detected
+   urgency_phrases_detected = []
     
     for urgency_phrase in urgency_phrases:
         if re.search(rf"\b{re.escape(urgency_phrase)}\b", text):
-            if "No Urgency Phrase Detected" in urgency_phrases_detected:
-                urgency_phrases_detected.remove("No Urgency Phrase Detected")
             total_points += URGENCY_LANGUAGE_POINT
-            reason_string = "Urgency Phrase Detected"#fix this
             urgency_phrases_detected.append(urgency_phrase)            
+    
+    if urgency_phrases_detected:
+        phrases_str = ", ".join([f"'{phrase}'" for phrase in urgency_phrases_detected])
+        reason_string = f"Urgency Phrase Detected: {phrases_str}"           
         
     return (total_points, reason_string)
 
@@ -167,16 +168,16 @@ def check_pin_otp_request(text: str) -> tuple[int, Optional[str]]:
     
     total_points = 0
     reason_string = None
-    sensitive_keywords_detected = ["No Request for any sensitive credential"]#added sensitive_keywords_detected to acount for all sensitive credential keyword detected
+   sensitive_keywords_detected = [] 
     
     for keyword in sensitive_keywords:
         if re.search(rf"\b{re.escape(keyword)}\b", text):
-            if "No Request for any sensitive credential" in sensitive_keywords_detected:
-                sensitive_keywords_detected.remove("No Request for any sensitive credential")
             total_points += SENSITIVE_SECURITY_KEYWORD_POINT
-            reason_string = "Sensitive Keyword Request Detected"#fix this
             sensitive_keywords_detected.append(keyword)
             
+    if sensitive_keywords_detected:
+        phrases_str = ", ".join([f"'{phrase}'" for phrase in sensitive_keywords_detected])
+        reason_string = f"Sensitive Keyword Request Detected: {phrases_str}"
     return (total_points, reason_string)
 
 
@@ -270,16 +271,16 @@ def check_generic_greeting(text: str) -> tuple[int, Optional[str]]:
     
     total_points = 0
     reason_string = None
-    generic_greetings_detected = ["No Generic Greeting Detected"]#added generic_greetings_detected to account for all generic keywords detected in text
+    generic_greetings_detected = []
     
     for greeting in generic_greetings:
         if re.search(rf"\b{re.escape(greeting)}\b", text):
-            if "No Generic Greeting Detected" in generic_greetings_detected:
-                generic_greetings_detected.remove("No Generic Greeting Detected")
             total_points += GENERIC_GREETING_POINT
-            reason_string = "Generic Greeting Detected"
             generic_greetings_detected.append(greeting)
-     
+            
+    if generic_greetings_detected:
+        phrases_str = ", ".join([f"'{phrase}'" for phrase in generic_greetings_detected])
+        reason_string = f"Generic Greeting Detected: {phrases_str}"
     return (total_points, reason_string)
 
 #Added check_* functions
