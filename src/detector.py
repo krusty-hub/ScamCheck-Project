@@ -178,6 +178,7 @@ def check_pin_otp_request(text: str) -> tuple[int, Optional[str]]:
     if sensitive_keywords_detected:
         phrases_str = ", ".join([f"'{phrase}'" for phrase in sensitive_keywords_detected])
         reason_string = f"Sensitive Keyword Request Detected: {phrases_str}"
+        
     return (total_points, reason_string)
 
 
@@ -293,6 +294,7 @@ def check_money_request(text: str) -> tuple[int, Optional[str]]:
     
     points = 0
     reason_string = None
+    money_request_detected = []
     
     money_request_phrases = [
     "send money",
@@ -320,14 +322,19 @@ def check_money_request(text: str) -> tuple[int, Optional[str]]:
     for phrase in money_request_phrases:
         if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += MONEY_REQUEST_POINTS
-            reason_string = "The message asks you to send, transfer, or pay money."
-        
+            money_request_detected.append(phrase)
+    
+    if money_request_detected:
+        phrases_str = ", ".join(f"'{phrase}'"for phrase in money_request_detected)
+        reason_string = f"Money Request Detected: {phrases_str}"
+      
     return (points, reason_string)
 
 def check_prize_or_reward(text: str) -> tuple[int, Optional[str]]:
     
     points = 0
     reason_string = None
+    prize_or_reward_detected = []
     
     prize_reward_phrases = [
     "you have won",
@@ -355,7 +362,12 @@ def check_prize_or_reward(text: str) -> tuple[int, Optional[str]]:
     for phrase in prize_reward_phrases:
         if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += PRIZE_REWARD_POINTS
-            reason_string = "The message claims you have won a prize or reward."
+            prize_or_reward_detected.append(phrase)
+            
+    if prize_or_reward_detected:
+        phrases_str = ", ".join(f"'{phrase}'"for phrase in prize_or_reward_detected)
+        reason_string = f"The message claims you have won a prize or reward: {phrases_str}"
+    
     
     return (points, reason_string)
 
@@ -363,6 +375,7 @@ def check_threats_or_consequences(text: str) -> tuple[int, Optional[str]]:
     
     points = 0
     reason_string = None
+    threats_or_consequences_detected = []
     
     threat_phrases = [
     "legal action",
@@ -388,14 +401,20 @@ def check_threats_or_consequences(text: str) -> tuple[int, Optional[str]]:
     for phrase in threat_phrases:
         if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += THREAT_POINTS
-            reason_string = "The message contains threats or warnings about negative consequences."
+            threats_or_consequences_detected.append(phrase)
             
+            
+    if threats_or_consequences_detected:
+        phrases_str = ", ".join(f"'{phrase}'" for phrase in threats_or_consequences_detected)
+        reason_string = f"The message contains threats or warnings about negative consequences: {phrases_str}"
+        
     return (points, reason_string)
 
 def check_personal_information_request(text: str) -> tuple[int, Optional[str]]:
     
     points = 0
     reason_string = None
+    personal_info_request_detected = []
     
     personal_info_phrases = [
     "date of birth",
@@ -414,7 +433,11 @@ def check_personal_information_request(text: str) -> tuple[int, Optional[str]]:
     for phrase in personal_info_phrases:
         if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += PERSONAL_INFO_POINTS
-            reason_string = "The message asks for personal or identifying information."
+            personal_info_request_detected.append(phrase)
+            
+    if personal_info_request_detected:
+        phrases_str = ", ".join(f"'{phrase}'" for phrase in personal_info_request_detected)
+        reason_string = f"The message asks for personal or identifying information: {phrases_str}"
             
     return (points, reason_string)    
         
