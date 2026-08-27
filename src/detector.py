@@ -10,6 +10,7 @@ points + a plain-English reason if it finds something. check_message() runs
 all of them and combines the results into a final risk score.
 """
 
+
 from typing import TypedDict, Optional
 import url_utils
 import re
