@@ -37,7 +37,7 @@ function trulyInvalidated() {
 
 function watchForInvalidation() {
   try {
-    invalidationPort = chrome.runtime.connect({ name: 'scamcheck-heartbeat' });
+    invalidationPort = chrome.runtime.connect({ name: 'Scamlex-heartbeat' });
     invalidationPort.onDisconnect.addListener(() => {
       if (trulyInvalidated()) {
         handleInvalidation();
@@ -61,7 +61,7 @@ function handleInvalidation() {
   document.removeEventListener('input', onInput, true);
   document.removeEventListener('mouseup', onMouseUp, true);
 
-  console.warn('[ScamCheck] Extension reloaded. Refresh to restore scanner.');
+  console.warn('[Scamlex] Extension reloaded. Refresh to restore scanner.');
 }
 
 // ---------------------------------------------------------------
@@ -129,7 +129,7 @@ function extractDeepText(node) {
   
   if (node.nodeType === Node.ELEMENT_NODE) {
     const tagName = node.tagName.toLowerCase();
-    if (tagName === 'script' || tagName === 'style' || tagName === 'noscript' || node.id === 'scamcheck-widget-container') {
+    if (tagName === 'script' || tagName === 'style' || tagName === 'noscript' || node.id === 'Scamlex-widget-container') {
       return '';
     }
   }
@@ -174,7 +174,7 @@ function analyzeTextPayload(text) {
     return;
   }
 
-  if (DEBUG) console.log('[ScamCheck] Queued analysis text length:', text.length);
+  if (DEBUG) console.log('[Scamlex] Queued analysis text length:', text.length);
   if (debounceTimer) clearTimeout(debounceTimer);
 
   debounceTimer = setTimeout(() => {
@@ -221,7 +221,7 @@ function onInput(event) {
 
 function onMouseUp(event) {
   if (!isContextAlive()) return;
-  if (event.target && event.target.closest('#scamcheck-widget-container')) return;
+  if (event.target && event.target.closest('#Scamlex-widget-container')) return;
 
   const selection = window.getSelection();
   const selectedText = selection ? selection.toString().trim() : '';
@@ -299,7 +299,7 @@ function highlightThreatsInDOM(textsToHighlight) {
     parts.forEach(part => {
       if (part.toLowerCase() === textToMatch.toLowerCase()) {
         const mark = document.createElement('mark');
-        mark.className = 'scamcheck-highlight';
+        mark.className = 'Scamlex-highlight';
         mark.style.cssText = "background-color: #ffe5e5; color: #d32f2f; font-weight: bold; border-bottom: 2px dashed #d32f2f; padding: 0 2px; border-radius: 3px;";
         mark.textContent = part;
         fragment.appendChild(mark);
@@ -313,7 +313,7 @@ function highlightThreatsInDOM(textsToHighlight) {
 }
 
 function clearHighlights() {
-  document.querySelectorAll('.scamcheck-highlight').forEach(mark => {
+  document.querySelectorAll('.Scamlex-highlight').forEach(mark => {
     const parent = mark.parentNode;
     if (parent) {
       parent.replaceChild(document.createTextNode(mark.textContent), mark);
@@ -329,10 +329,10 @@ function showWarningWidget(resultData) {
   // Default to empty array if backend doesn't provide reasons yet
   const reasons = Array.isArray(resultData.reasons) ? resultData.reasons : []; 
 
-  let widget = document.getElementById('scamcheck-widget-container');
+  let widget = document.getElementById('Scamlex-widget-container');
   if (!widget) {
     widget = document.createElement('div');
-    widget.id = 'scamcheck-widget-container';
+    widget.id = 'Scamlex-widget-container';
     widget.style.cssText = `
      position: fixed;
      bottom: 20px;
@@ -357,7 +357,7 @@ function showWarningWidget(resultData) {
 
   widget.innerHTML = `
     <!-- Collapsed State (Default) -->
-    <div id="scamcheck-collapsed" style="
+    <div id="Scamlex-collapsed" style="
       background: #d32f2f; 
       color: white; 
       width: 48px; 
@@ -370,12 +370,12 @@ function showWarningWidget(resultData) {
       cursor: grab;
       font-size: 20px;
       user-select: none;
-    " title="ScamCheck: Threat Detected (Click to expand)">
+    " title="Scamlex: Threat Detected (Click to expand)">
       🛡️
     </div>
 
     <!-- Expanded State -->
-    <div id="scamcheck-expanded" style="
+    <div id="Scamlex-expanded" style="
       display: none;
       background: #ffffff;
       border: 1px solid #e0e0e0;
@@ -385,11 +385,11 @@ function showWarningWidget(resultData) {
       overflow: hidden;
       cursor: default;
     ">
-      <div style="background: #ffebee; padding: 12px 16px; border-bottom: 1px solid #ffcdd2; display: flex; justify-content: space-between; align-items: center; cursor: grab;" class="scamcheck-drag-handle">
+      <div style="background: #ffebee; padding: 12px 16px; border-bottom: 1px solid #ffcdd2; display: flex; justify-content: space-between; align-items: center; cursor: grab;" class="Scamlex-drag-handle">
         <strong style="color: #d32f2f; font-size: 14px; display: flex; align-items: center; gap: 6px;">
-          <span>⚠</span> ScamCheck Alert
+          <span>⚠</span> Scamlex Alert
         </strong>
-        <button id="scamcheck-collapse-btn" style="background: none; border: none; cursor: pointer; color: #d32f2f; font-size: 16px; padding: 0;">&times;</button>
+        <button id="Scamlex-collapse-btn" style="background: none; border: none; cursor: pointer; color: #d32f2f; font-size: 16px; padding: 0;">&times;</button>
       </div>
       
       <div style="padding: 16px;">
@@ -408,8 +408,8 @@ function showWarningWidget(resultData) {
 widget.addEventListener('click', (e) => {
 
  // CLICK WARNING ICON → OPEN FULL WARNING
-  const collapsed = e.target.closest('#scamcheck-collapsed') || 
-    (e.target === widget && widget.querySelector('#scamcheck-collapsed')?.style.display !== 'none' ? widget.querySelector('#scamcheck-collapsed') : null);
+  const collapsed = e.target.closest('#Scamlex-collapsed') || 
+    (e.target === widget && widget.querySelector('#Scamlex-collapsed')?.style.display !== 'none' ? widget.querySelector('#Scamlex-collapsed') : null);
 
   if (collapsed) {
 
@@ -419,7 +419,7 @@ widget.addEventListener('click', (e) => {
       return;
     }
 
-    const expanded = widget.querySelector('#scamcheck-expanded');
+    const expanded = widget.querySelector('#Scamlex-expanded');
 
     if (expanded) {
       collapsed.style.display = 'none';
@@ -430,12 +430,12 @@ widget.addEventListener('click', (e) => {
   }
 
   // CLICK X → CLOSE WARNING
-  const collapseButton = e.target.closest('#scamcheck-collapse-btn');
+  const collapseButton = e.target.closest('#Scamlex-collapse-btn');
 
   if (collapseButton) {
 
-    const expanded = widget.querySelector('#scamcheck-expanded');
-    const collapsedView = widget.querySelector('#scamcheck-collapsed');
+    const expanded = widget.querySelector('#Scamlex-expanded');
+    const collapsedView = widget.querySelector('#Scamlex-collapsed');
 
     if (expanded && collapsedView) {
       expanded.style.display = 'none';
@@ -487,8 +487,8 @@ widget.addEventListener('click', (e) => {
     // Only drag from the collapsed circle
     // or expanded header
     const dragTarget =
-      e.target.closest('#scamcheck-collapsed') ||
-      e.target.closest('.scamcheck-drag-handle');
+      e.target.closest('#Scamlex-collapsed') ||
+      e.target.closest('.Scamlex-drag-handle');
 
     if (!dragTarget) {
       return;
