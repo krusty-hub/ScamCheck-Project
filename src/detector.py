@@ -14,6 +14,20 @@ all of them and combines the results into a final risk score.
 from typing import TypedDict, Optional
 import url_utils
 import re
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class RiskResult(TypedDict):
     score: int            # 0-100, higher = more suspicious
@@ -46,6 +60,7 @@ MONEY_AND_URGENCY = 15
 PERSONAL_INFO_AND_URGENCY = 10
 
 
+@app.get("/check_message")
 def check_message(text: str) -> RiskResult:
     
     text = text.lower().strip()
@@ -194,6 +209,9 @@ def check_suspicious_links(text: str) -> tuple[int, list[str]]:
         Contains misleading @ structure — e.g. trusted-site.com@192.168.1.10                +3
         Uses a Punycode domain — hostname contains xn--                                     +1
         Contains excessive percent-encoding — 3+ %XX sequences anywhere in the URL          +1
+        check suspicious path                                                               +3
+        REDIRECT_PATTERN_POINTS                                                             +3
+        MALFORMED_QUERY_POINTS                                                              +2
     """
     
     total_points = 0
