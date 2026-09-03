@@ -2,11 +2,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const connectBtn = document.getElementById('connectBtn');
   const statusText = document.getElementById('statusText');
   const statusDot = document.getElementById('statusDot');
-  const streamlitLink = document.getElementById('streamlitLink');
+  const ScamlexLink = document.getElementById('ScamlexLink');
   const menuBtn = document.getElementById('menuBtn');
 
-  // Streamlit app URL running via app.py
-  const STREAMLIT_URL = "http://localhost:8501"; 
+  // Scamlex app URL running via app.py
+  const Scamlex_URL = "http://localhost:8080/"; 
 
   // Load active status from sync storage
   const { isConnected } = await chrome.storage.local.get(['isConnected']);
@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateUI(newState);
   });
 
-  const openDashboard = () => chrome.tabs.create({ url: STREAMLIT_URL });
-  streamlitLink.addEventListener('click', openDashboard);
+  const openDashboard = () => chrome.tabs.create({ url: Scamlex_URL });
+  ScamlexLink.addEventListener('click', openDashboard);
   menuBtn.addEventListener('click', openDashboard);
 
   function updateUI(connected) {
