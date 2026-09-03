@@ -1,114 +1,184 @@
-# ScamCheck — Current State + Full Project Directions
+# Scamlex (ScamCheck)
 
-This is where the project actually stands right now, based on a real review
-of what you built for the demo — not a generic template. Good work so far:
-the weighted scoring system and the four extra check functions (money
-request, prize/reward, threats, personal info) were already ahead of the
-original plan.
+> A comprehensive scam and phishing detection platform featuring a modern web application, a robust Python backend, and a real-time Chrome Extension.
 
-## What's already working
+## 📖 Project Purpose
+Scamlex (ScamCheck) is designed to protect users from malicious websites, phishing attempts, and online scams. By utilizing a pattern-matching database and URL analysis algorithms, the system evaluates links and web content to determine their safety. Users can access this protection via a dedicated web scanner interface or seamlessly through a browser extension.
 
-- Rule-based detection with weighted scoring + combination bonuses
-  (`detector.py`)
-- URL red-flag checks: shortened links, IP addresses, bank-lookalike
-  domains, suspicious keywords, misleading `@` structure, punycode,
-  excessive percent-encoding (`url_utils.py`)
-- **NEW**: `check_suspicious_path()` and `check_redirect_parameters()` in
-  `url_utils.py` — added to catch the False Negative cases you found
-  yourself (see `tests/False_Negative_Test_Cases.txt`). These catch links
-  hosted on legitimate platforms (like cloud storage) that get abused —
-  the giveaway isn't the domain, it's the random-looking path/fragment or
-  the ad-redirect-style query parameters. Read the docstrings in
-  `url_utils.py` — they explain the reasoning, not just the code.
-- Streamlit UI with clean status styling (`app.py`)
-- SQLite storage, `init_db()` / `seed_from_examples()` / `get_all_patterns()`
-  working (`db.py`)
-- 15 seed patterns in `seed_patterns.py` (target for full build: 25-30+)
+## ✨ Key Features
+* **URL & Content Scanner:** A dedicated web interface (`scanner.tsx`) to manually input and analyze suspicious URLs.
+* **Real-Time Browser Protection:** A Chrome Extension that allows users to quickly scan the active tab or check links on the fly.
+* **Pattern-Based Detection:** Utilizes a custom backend detection engine (`detector.py` and `url_utils.py`) backed by an SQLite database (`scamcheck.db`) of known seed patterns.
+* **Modern UI/UX:** Built with a highly responsive, accessible frontend using React, Tailwind CSS, and shadcn/ui components.
+* **Dedicated Landing Page:** A polished introduction to the tool (`scamlex-landing.tsx`).
 
-## Known open issues — fix these before moving on to new features
+## 🛠️ Technologies & Frameworks Used
 
-These were found through real testing, not guessed at. Fix them in this
-order, since some make others easier to verify:
+**Frontend**
+* React (TypeScript)
+* Vite (Build tool)
+* Tailwind CSS (Styling)
+* shadcn/ui (Component library)
+* TanStack Router (Routing)
+* Bun (Package manager & runtime)
 
-1. **Word-boundary bug in keyword matching.** Every `check_*` function that
-   does `if keyword in text` will false-trigger on a keyword that appears
-   *inside* another word — e.g. the NIN check fires on the word
-   "thannina" because "nin" is a substring of it. Confirmed with:
-   ```python
-   from detector import check_pin_otp_request
-   check_pin_otp_request("view it at thannina.html")
-   # -> (15, "Sensitive Keyword Request Detected")  <- false positive
-   ```
-   Fix: use `re.search(r'\bkeyword\b', text)` (word-boundary matching)
-   instead of `keyword in text`, for every keyword-list check across
-   `detector.py`. This is a bigger fix than it sounds like — it touches
-   ~8 functions — but it's the same pattern repeated, so once you fix
-   one you can apply the same fix everywhere.(FIXED)
+**Backend**
+* Python 3.x
+* SQLite3 (Database)
+* Custom Detection Logic (`detector.py`, `url_utils.py`)
 
-2. **Bank-lookalike dictionary bug.** The `banks` dict in
-   `check_valid_bank_url()` has a `"gtb": "gtbank"` entry where the value
-   isn't a real domain. Confirmed this causes a false positive on a real
-   GTBank URL:
-   ```python
-   check_valid_bank_url("https://www.gtbank.com/personal-banking")
-   # -> (3, "Possible bank lookalike domain")  <- false positive on a REAL bank URL
-   ```
-   You've already started fixing this — worth double-checking the fix
-   against this exact test case once it's in.(FIXED)
+**Browser Extension**
+* HTML, CSS, JavaScript
+* Chrome WebExtensions API (`manifest.json V3`)
 
-3. **Generic reason strings.** `check_urgency_language()`,
-   `check_pin_otp_request()`, and `check_generic_greeting()` build a
-   `*_detected` list tracking which specific phrase matched, then never
-   use it — the reason string just says generic text like "Urgency Phrase
-   Detected" instead of naming the actual phrase found. Fix: work the
-   detected-phrase list into the actual reason string so the "why did it
-   flag this" explanation is specific, not generic. This matters for the
-   evaluation criterion about explaining your own logic clearly.(FIXED)
+## 📂 Project Architecture
 
-4. **FN03 is still an open case.** `http://unichemlabs.com/index.php?8b9sol`
-   still scores 0 — it's a different pattern from the other three (a
-   compromised legitimate small-business site with a short, malformed
-   query string instead of proper key=value pairs). This is a good one to
-   think through as a team before deciding whether it's worth a dedicated
-   check or an acceptable gap for v1.(FIXED)
-
-## Full project roadmap from here
-
-**Phase 1 (next few weeks) — everyone:**
-- Fix the three known issues above
-- Grow `seed_patterns.py` to 25-30+ examples (mix of scam tactics: fake
-  job offers, romance scams, fake customer care, phishing links, fake
-  refunds — plus tricky "safe" examples that could otherwise look
-  suspicious)
-- Write real tests in a `test_detector.py` and `test_url_utils.py` —
-  including the False Negative cases as permanent regression tests, so
-  future changes can't silently reintroduce this exact bug
-- Basic user accounts (so someone can save their check history)
-
-**Phase 2 — community layer:**
-- Community scam reporting: implement `add_reported_scam()` in `db.py`
-  (currently a stub) so users can submit new scam examples that grow the
-  shared database
-- Illustrator's production-grade risk-badge visuals and reporting-flow UI
-
-**Phase 3 (stretch, time-permitting) — deeper dev only:**
-- Lightweight ML classifier (scikit-learn) trained on the grown pattern
-  database, run alongside the rule-based system, not replacing it
-- Deploy to Streamlit Community Cloud or Render for a real shareable link
-
-## Folder structure
+```text
+ScamCheck-Project-scamlex/
+├── Backend/                    # Python API and core detection logic
+│   ├── data/                   # Contains scamcheck.db and seed_patterns.py
+│   ├── src/                    # Backend source code (app.py, main.py, detector.py)
+│   └── tests/                  # Test cases (e.g., False_Negative_Test_Cases.txt)
+├── Chrome Extension/           # Browser extension source files
+│   ├── Icons/                  # Extension assets
+│   ├── background.js           # Extension service worker
+│   ├── content.js              # Content scripts for page interaction
+│   ├── popup.html & popup.js   # Extension UI and logic
+│   └── manifest.json           # Extension configuration
+├── src/                        # Frontend source code
+│   ├── components/             # Reusable UI components (shadcn/ui, scanner, landing)
+│   ├── routes/                 # Frontend routing configuration
+│   ├── lib/ & hooks/           # Utilities and custom React hooks
+│   └── styles.css              # Global styles
+├── package.json & bun.lock     # Frontend dependencies
+├── vite.config.ts              # Vite bundler configuration
+└── components.json             # shadcn/ui configuration
 
 ```
-scamcheck/
-├── README.md                          <- this file
-├── src/
-│   ├── detector.py                     <- your actual working detection engine
-│   ├── url_utils.py                     <- URL checks + the 2 new functions
-│   ├── app.py                            <- your working Streamlit UI
-│   └── db.py                              <- your working SQLite layer
-├── data/
-│   └── seed_patterns.py                 <- your 15 seed examples (grow this)
-└── tests/
-    └── False_Negative_Test_Cases.txt   <- the FN cases you found — turn
-                                             these into real pytest tests
+
+## ⚙️ System Requirements
+
+* **Node.js** (v16+) or **Bun** (recommended, based on `bun.lock`)
+* **Python** 3.8 or higher
+* **Google Chrome** or a Chromium-based browser (for the extension)
+
+## 🚀 Installation & Setup
+
+### 1. Clone the Repository
+
+```bash
+git clone <your-repository-url>
+cd ScamCheck-Project-scamlex
+
+```
+
+### 2. Backend Setup (Python)
+
+1. Navigate to the backend directory:
+```bash
+cd Backend
+
+```
+
+
+2. Create and activate a virtual environment:
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows use: venv\Scripts\activate
+
+```
+
+
+3. Initialize the database and seed patterns:
+```bash
+python data/seed_patterns.py
+
+```
+
+
+4. Start the backend server:
+```bash
+python src/main.py 
+# or python src/app.py (depending on your entry point)
+
+```
+
+
+
+### 3. Frontend Setup (Web App)
+
+1. Open a new terminal instance and navigate to the project root.
+2. Install dependencies using Bun:
+```bash
+bun install
+
+```
+
+
+3. Start the Vite development server:
+```bash
+bun run dev
+
+```
+
+
+4. Open your browser and navigate to the local URL provided by Vite (usually `http://localhost:5173`).
+
+### 4. Chrome Extension Setup
+
+1. Open Google Chrome and navigate to `chrome://extensions/`.
+2. Enable **"Developer mode"** in the top right corner.
+3. Click **"Load unpacked"**.
+4. Select the `Chrome Extension` folder located in the project root.
+5. Pin the Scamlex extension icon to your browser toolbar.
+
+## 💻 How to Use the Application
+
+* **Web Scanner:** Navigate to the local frontend URL. Use the Landing Page to navigate to the Scanner, input a suspicious URL, and click scan. The app will communicate with the backend to analyze the link.
+* **Chrome Extension:** Click the Scamlex icon in your Chrome toolbar while browsing a suspicious site. The popup will analyze the current page's URL and return a safety verdict.
+
+## 🔌 API Endpoints (Backend)
+
+*(Note: Refer to `Backend/src/app.py` for exact routing configurations)*
+
+* The backend exposes RESTful endpoints (likely via Flask/FastAPI based on the `app.py` structure) that the frontend and extension consume to pass URLs to `detector.py` and retrieve JSON safety reports.
+
+## 🖼️ Screenshots
+
+*(Replace these placeholders with actual screenshots of your project)*
+
+> **Placeholder: Web App Landing Page**
+> `![Landing Page](docs/screenshots/landing.png)`
+
+> **Placeholder: Scanner Interface in Action**
+> `![Scanner](docs/screenshots/scanner.png)`
+
+> **Placeholder: Chrome Extension Popup**
+> `![Extension](docs/screenshots/extension.png)`
+
+## 🚧 Known Limitations
+
+* The detection relies on the patterns stored in `scamcheck.db`. Zero-day scams or URLs not matching existing criteria (`False_Negative_Test_Cases.txt`) may require manual verification.
+* The backend server must be actively running locally for the frontend and extension to process scans.
+
+## 🔮 Future Improvements
+
+* Integration of machine learning models for predictive scam detection beyond static pattern matching.
+* Cloud hosting deployment for the backend database to allow standalone use of the Chrome Extension without a local server.
+* Community reporting feature to dynamically update `seed_patterns.py`.
+
+## 🤝 Contribution Instructions
+
+1. Fork the repository.
+2. Create your feature branch: `git checkout -b feature/AmazingFeature`
+3. Commit your changes: `git commit -m 'Add some AmazingFeature'`
+4. Push to the branch: `git push origin feature/AmazingFeature`
+5. Open a Pull Request.
+
+## 📄 License
+
+This project is open-source. Please refer to the `LICENSE` file in the repository for more details.
+
+```
+
 ```
