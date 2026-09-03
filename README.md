@@ -143,18 +143,6 @@ bun run dev
 
 * The backend exposes RESTful endpoints (likely via Flask/FastAPI based on the `app.py` structure) that the frontend and extension consume to pass URLs to `detector.py` and retrieve JSON safety reports.
 
-## 🖼️ Screenshots
-
-*(Replace these placeholders with actual screenshots of your project)*
-
-> **Placeholder: Web App Landing Page**
-> `![Landing Page](docs/screenshots/landing.png)`
-
-> **Placeholder: Scanner Interface in Action**
-> `![Scanner](docs/screenshots/scanner.png)`
-
-> **Placeholder: Chrome Extension Popup**
-> `![Extension](docs/screenshots/extension.png)`
 
 ## 🚧 Known Limitations
 
@@ -166,19 +154,5 @@ bun run dev
 * Integration of machine learning models for predictive scam detection beyond static pattern matching.
 * Cloud hosting deployment for the backend database to allow standalone use of the Chrome Extension without a local server.
 * Community reporting feature to dynamically update `seed_patterns.py`.
-
-## 🤝 Contribution Instructions
-
-1. Fork the repository.
-2. Create your feature branch: `git checkout -b feature/AmazingFeature`
-3. Commit your changes: `git commit -m 'Add some AmazingFeature'`
-4. Push to the branch: `git push origin feature/AmazingFeature`
-5. Open a Pull Request.
-
-## 📄 License
-
-This project is open-source. Please refer to the `LICENSE` file in the repository for more details.
-
-```
 
 ```
