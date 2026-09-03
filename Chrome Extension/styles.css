@@ -1,5 +1,5 @@
 /* =========================================================
-   ScamCheck Extension Popup
+   Scamlex Extension Popup
    ========================================================= */
 
 * {
@@ -414,7 +414,7 @@ body.popup-body {
    INJECTED FLOATING WARNING WIDGET
    ========================================================= */
 
-#scamcheck-floating-bar {
+#Scamlex-floating-bar {
   position: fixed;
 
   bottom: 20px;
@@ -457,10 +457,10 @@ body.popup-body {
 
   backdrop-filter: blur(10px);
 
-  animation: scamcheck-slide-in 0.25s ease-out;
+  animation: Scamlex-slide-in 0.25s ease-out;
 }
 
-.scamcheck-content {
+.Scamlex-content {
   display: flex;
 
   align-items: center;
@@ -468,7 +468,7 @@ body.popup-body {
   gap: 10px;
 }
 
-#scamcheck-close-btn {
+#Scamlex-close-btn {
   width: 24px;
   height: 24px;
 
@@ -495,7 +495,7 @@ body.popup-body {
     transform 0.2s ease;
 }
 
-#scamcheck-close-btn:hover {
+#Scamlex-close-btn:hover {
   background: rgba(255, 255, 255, 0.14);
 
   transform: scale(1.05);
@@ -506,7 +506,7 @@ body.popup-body {
    ANIMATION
    ========================================================= */
 
-@keyframes scamcheck-slide-in {
+@keyframes Scamlex-slide-in {
   from {
     opacity: 0;
     transform: translate3d(0, 10px, 0);
@@ -518,14 +518,14 @@ body.popup-body {
   }
 }
 
-#scamcheck-widget-container {
+#Scamlex-widget-container {
   touch-action: none;
   user-select: none;
   will-change: transform;
 }
 
-#scamcheck-collapsed,
-.scamcheck-drag-handle {
+#Scamlex-collapsed,
+.Scamlex-drag-handle {
   touch-action: none;
   user-select: none;
 }
