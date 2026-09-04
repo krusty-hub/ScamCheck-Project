@@ -209,9 +209,6 @@ def check_suspicious_links(text: str) -> tuple[int, list[str]]:
         Contains misleading @ structure — e.g. trusted-site.com@192.168.1.10                +3
         Uses a Punycode domain — hostname contains xn--                                     +1
         Contains excessive percent-encoding — 3+ %XX sequences anywhere in the URL          +1
-        check suspicious path                                                               +3
-        REDIRECT_PATTERN_POINTS                                                             +3
-        MALFORMED_QUERY_POINTS                                                              +2
     """
     
     total_points = 0
@@ -222,51 +219,94 @@ def check_suspicious_links(text: str) -> tuple[int, list[str]]:
     
     
     for url in url_list:
+        # 0. Input type sanity check
+        if not url or not isinstance(url, str):
+            continue
+
+        url_cleaned = url.strip()
+        if not url_cleaned:
+            continue
+        
+        
+        # PHASE 1: STRUCTURAL VALIDATION (Hard Gates)        
+        
+        # 1. Parse the URL
+        is_parsed, parse_msg = url_utils.parse_url_safely(url_cleaned)
+        if not is_parsed:
+            total_reasons_list.append(parse_msg)
+            continue
+        
+        # 2. Scheme Check   
+        is_scheme_safe, score, scheme_msg = url_utils.check_scheme_safety(url_cleaned)
+        # If score is 0, it was missing a scheme (INVALID)
+        # If score is 7, it was a dangerous non-web scheme like javascript: (FLAGGED)
+        if not is_scheme_safe:
+            if score > 0:
+                total_points += score
+                total_reasons_list.append(scheme_msg)
+            continue
+        
+        # 3. Hostname Presence Check
+        has_hostname, score, host_msg = url_utils.check_hostname(url_cleaned)
+        if not has_hostname:
+            total_reasons_list.append(host_msg)
+            continue
+        
+            
+        # PHASE 2: HEURISTIC EVALUATION (0-7 Points)            
+        
         url_points = 0
         url_reasons_list = []
     
-        points, reason_string = url_utils.check_shortened_link(url)
+        points, reason_string = url_utils.check_shortened_link(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
-        points, reason_string = url_utils.check_ipaddress(url)
+        points, reason_string = url_utils.check_ipaddress(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
-        points, reason_string = url_utils.check_valid_bank_url(url)
+        points, reason_string = url_utils.check_valid_bank_url(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
-        points, reason_string = url_utils.check_suspicious_language(url)
+        points, reason_string = url_utils.check_suspicious_language(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
-        points, reason_string = url_utils.check_url_structure(url)
+        points, reason_string = url_utils.check_url_structure(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
-        points, reason_string = url_utils.check_punycode_domain(url)
+        points, reason_string = url_utils.check_punycode_domain(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
-        points, reason_string = url_utils.check_excessive_percent_encoding(url)
+        points, reason_string = url_utils.check_excessive_percent_encoding(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
-        # NEW: catches links hosted on legitimate platforms (e.g. cloud
-        # storage) that domain-reputation checks above can't flag, because
-        # the giveaway is in the path/fragment or query string shape, not
-        # the domain itself. Added after the False Negative test cases
-        # (storage.googleapis.com links) were found to score 0 otherwise.
-        points, reason_string = url_utils.check_suspicious_path(url)
+        points, reason_string = url_utils.check_suspicious_path(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
-        points, reason_string = url_utils.check_redirect_parameters(url)
+        points, reason_string = url_utils.check_redirect_parameters(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
 
-        points, reason_string = url_utils.check_malformed_query(url)
+        points, reason_string = url_utils.check_malformed_query(url_cleaned)
+        url_points += points
+        url_reasons_list.append(reason_string)
+        
+        points, reason_string = url_utils.check_typosquatting(url_cleaned)
+        url_points += points
+        url_reasons_list.append(reason_string)
+        
+        points, reason_string = url_utils.check_domain_age(url_cleaned)
+        url_points += points
+        url_reasons_list.append(reason_string)
+        
+        points, reason_string = url_utils.check_google_safe_browsing(url_cleaned)
         url_points += points
         url_reasons_list.append(reason_string)
         
@@ -276,10 +316,9 @@ def check_suspicious_links(text: str) -> tuple[int, list[str]]:
         total_points += capped_url_points
         total_reasons_list.extend(url_reasons_list)
         
-        break_down.append({"URL" : url, "Points" : url_points, "Reasons" : url_reasons_list})        
+        break_down.append({"URL" : url_cleaned, "Points" : url_points, "Reasons" : url_reasons_list})        
         
     return (total_points, total_reasons_list)
-
 
 def check_generic_greeting(text: str) -> tuple[int, Optional[str]]:
     
@@ -495,3 +534,4 @@ if __name__ == "__main__":
         print(f"Message: {msg}")
         result = check_message(msg)
         print(f"Result: {result}")
+
