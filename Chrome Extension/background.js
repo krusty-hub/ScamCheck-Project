@@ -4,7 +4,7 @@ const DEBUG = true; // set to false once everything is confirmed working
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'analyzeText') {
-    if (DEBUG) console.log('[ScamCheck:bg] received analyzeText, calling backend...', request.payload);
+    if (DEBUG) console.log('[Scamlex:bg] received analyzeText, calling backend...', request.payload);
 
     fetch('http://127.0.0.1:8000/scan', {
       method: 'POST',
@@ -14,12 +14,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       body: JSON.stringify(request.payload)
     })
       .then((res) => {
-        if (DEBUG) console.log('[ScamCheck:bg] backend HTTP status:', res.status);
+        if (DEBUG) console.log('[Scamlex:bg] backend HTTP status:', res.status);
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
         return res.json();
       })
       .then((data) => {
-        if (DEBUG) console.log('[ScamCheck:bg] backend response body:', data);
+        if (DEBUG) console.log('[Scamlex:bg] backend response body:', data);
         sendResponse({
           isScam: data.isScam || false,
           score: data.score || 0,
@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
       })
       .catch((err) => {
-        console.warn('[ScamCheck:bg] Fetch Error:', err.message);
+        console.warn('[Scamlex:bg] Fetch Error:', err.message);
         sendResponse({ 
           isScam: false, 
           error: err.message,
@@ -44,7 +44,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 chrome.runtime.onConnect.addListener((port) => {
-  if (port.name === 'scamcheck-heartbeat') {
+  if (port.name === 'Scamlex-heartbeat') {
     // keeping connection alive
   }
 });

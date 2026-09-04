@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ScamCheck Guard",
+  "name": "Scamlex Guard",
   "version": "2.2",
   "description": "Real-time scam protection while you browse.",
 
@@ -30,16 +30,16 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "icons/scamcheck.png",
-      "32": "icons/scamcheck.png",
-      "48": "icons/scamcheck.png"
+      "16": "icons/Scamlex.png",
+      "32": "icons/Scamlex.png",
+      "48": "icons/Scamlex.png"
     }
   },
 
   "icons": {
-    "16": "icons/scamcheck.png",
-    "32": "icons/scamcheck.png",
-    "48": "icons/scamcheck.png",
-    "128": "icons/scamcheck.png"
+    "16": "icons/Scamlex.png",
+    "32": "icons/Scamlex.png",
+    "48": "icons/Scamlex.png",
+    "128": "icons/Scamlex.png"
   }
 }
