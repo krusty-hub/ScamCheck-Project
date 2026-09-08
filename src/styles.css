@@ -1,7 +1,8 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
+@source "../src";
 
+/* Tailwind CSS v4 directive; unsupported by generic CSS validators. */
 @custom-variant dark (&:is(.dark *));
 
 /*

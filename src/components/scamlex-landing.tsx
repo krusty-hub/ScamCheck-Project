@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   Activity, ArrowRight, Braces, ChevronRight, Database, Fingerprint, Gauge, Globe2,
   Menu, MessageSquareText, ScanSearch, ServerCog, ShieldAlert, ShieldCheck, X,
@@ -7,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { ScannerDemo } from "@/components/scanner";
 import { ScamlexBrand } from "@/components/scamlex-brand";
-
+import { Link } from '@tanstack/react-router';
 
 const nav = [
   ["How it works", "#how-it-works"], ["Features", "#features"], ["Security", "#security"], ["Scanner", "#scanner"],
@@ -33,12 +34,33 @@ export function ScamlexLanding() {
           <nav className="hidden items-center gap-7 md:flex" aria-label="Primary navigation">
             {nav.map(([label, href]) => <a key={href} href={href} className="nav-link">{label}</a>)}
           </nav>
-          <div className="hidden md:block"><Button asChild className="h-10 px-5"><a href="#scanner">Scan now <ArrowRight /></a></Button></div>
+          <div className="hidden md:flex items-center gap-2">
+            <Button variant="ghost" asChild className="h-10 px-5">
+              <Link to="/auth">Sign in</Link>
+            </Button>
+            <Button asChild className="h-10 px-5">
+              <a href="#scanner">Scan now <ArrowRight /></a>
+            </Button>
+          </div>
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setMenuOpen((open) => !open)} aria-label="Toggle navigation" aria-expanded={menuOpen}>
             {menuOpen ? <X /> : <Menu />}
           </Button>
         </div>
-        {menuOpen && <nav className="border-t border-border bg-background px-5 py-4 md:hidden">{nav.map(([label, href]) => <a key={href} href={href} onClick={() => setMenuOpen(false)} className="block border-b border-border py-3 text-sm font-medium">{label}</a>)}<Button asChild className="mt-4 w-full"><a href="#scanner" onClick={() => setMenuOpen(false)}>Scan now</a></Button></nav>}
+        {menuOpen && (
+          <nav className="border-t border-border bg-background px-5 py-4 md:hidden">
+            {nav.map(([label, href]) => (
+              <a key={href} href={href} onClick={() => setMenuOpen(false)} className="block border-b border-border py-3 text-sm font-medium">
+                {label}
+              </a>
+            ))}
+            <Link to="/auth" onClick={() => setMenuOpen(false)} className="block border-b border-border py-3 text-sm font-medium">
+              Sign in
+            </Link>
+            <Button asChild className="mt-4 w-full">
+              <a href="#scanner" onClick={() => setMenuOpen(false)}>Scan now</a>
+            </Button>
+          </nav>
+        )}
       </header>
 
       <main>

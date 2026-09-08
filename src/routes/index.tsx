@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ScamlexLanding } from "@/components/scamlex-landing";
+import { createFileRoute } from '@tanstack/react-router'
+import { ScamlexLanding } from '@/components/scamlex-landing'
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,3 +16,7 @@ export const Route = createFileRoute("/")({
   }),
   component: ScamlexLanding,
 });
+
+function IndexComponent() {
+  return <ScamlexLanding />
+}
