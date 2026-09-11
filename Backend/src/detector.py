@@ -10,8 +10,26 @@ points + a plain-English reason if it finds something. check_message() runs
 all of them and combines the results into a final risk score.
 """
 
+
 from typing import TypedDict, Optional
 import url_utils
+import re
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class RiskResult(TypedDict):
     score: int            # 0-100, higher = more suspicious
@@ -44,6 +62,7 @@ MONEY_AND_URGENCY = 15
 PERSONAL_INFO_AND_URGENCY = 10
 
 
+@app.get("/check_message")
 def check_message(text: str) -> RiskResult:
     
     text = text.lower().strip()
@@ -136,15 +155,16 @@ def check_urgency_language(text: str) -> tuple[int, Optional[str]]:
     
     total_points = 0
     reason_string = None
-    urgency_phrases_detected = ["No Urgency Phrase Detected"]#added urgency_phrases_detected to account for all urgency phrases detected
+    urgency_phrases_detected = []
     
     for urgency_phrase in urgency_phrases:
-        if urgency_phrase in text:
-            if "No Urgency Phrase Detected" in urgency_phrases_detected:
-                urgency_phrases_detected.remove("No Urgency Phrase Detected")
+        if re.search(rf"\b{re.escape(urgency_phrase)}\b", text):
             total_points += URGENCY_LANGUAGE_POINT
-            reason_string = "Urgency Phrase Detected"#fix this
             urgency_phrases_detected.append(urgency_phrase)            
+    
+    if urgency_phrases_detected:
+        phrases_str = ", ".join([f"'{phrase}'" for phrase in urgency_phrases_detected])
+        reason_string = f"Urgency Phrase Detected: {phrases_str}"           
         
     return (total_points, reason_string)
 
@@ -166,16 +186,17 @@ def check_pin_otp_request(text: str) -> tuple[int, Optional[str]]:
     
     total_points = 0
     reason_string = None
-    sensitive_keywords_detected = ["No Request for any sensitive credential"]#added sensitive_keywords_detected to acount for all sensitive credential keyword detected
+    sensitive_keywords_detected = [] 
     
     for keyword in sensitive_keywords:
-        if keyword in text:
-            if "No Request for any sensitive credential" in sensitive_keywords_detected:
-                sensitive_keywords_detected.remove("No Request for any sensitive credential")
+        if re.search(rf"\b{re.escape(keyword)}\b", text):
             total_points += SENSITIVE_SECURITY_KEYWORD_POINT
-            reason_string = "Sensitive Keyword Request Detected"#fix this
             sensitive_keywords_detected.append(keyword)
             
+    if sensitive_keywords_detected:
+        phrases_str = ", ".join([f"'{phrase}'" for phrase in sensitive_keywords_detected])
+        reason_string = f"Sensitive Keyword Request Detected: {phrases_str}"
+        
     return (total_points, reason_string)
 
 
@@ -190,6 +211,9 @@ def check_suspicious_links(text: str) -> tuple[int, list[str]]:
         Contains misleading @ structure — e.g. trusted-site.com@192.168.1.10                +3
         Uses a Punycode domain — hostname contains xn--                                     +1
         Contains excessive percent-encoding — 3+ %XX sequences anywhere in the URL          +1
+        check suspicious path                                                               +3
+        REDIRECT_PATTERN_POINTS                                                             +3
+        MALFORMED_QUERY_POINTS                                                              +2
     """
     
     total_points = 0
@@ -243,6 +267,10 @@ def check_suspicious_links(text: str) -> tuple[int, list[str]]:
         points, reason_string = url_utils.check_redirect_parameters(url)
         url_points += points
         url_reasons_list.append(reason_string)
+
+        points, reason_string = url_utils.check_malformed_query(url)
+        url_points += points
+        url_reasons_list.append(reason_string)
         
         url_reasons_list = [reason for reason in url_reasons_list if reason is not None] #Removes None
         
@@ -265,16 +293,16 @@ def check_generic_greeting(text: str) -> tuple[int, Optional[str]]:
     
     total_points = 0
     reason_string = None
-    generic_greetings_detected = ["No Generic Greeting Detected"]#added generic_greetings_detected to account for all generic keywords detected in text
+    generic_greetings_detected = []
     
     for greeting in generic_greetings:
-        if greeting in text:
-            if "No Generic Greeting Detected" in generic_greetings_detected:
-                generic_greetings_detected.remove("No Generic Greeting Detected")
+        if re.search(rf"\b{re.escape(greeting)}\b", text):
             total_points += GENERIC_GREETING_POINT
-            reason_string = "Generic Greeting Detected"
             generic_greetings_detected.append(greeting)
-     
+            
+    if generic_greetings_detected:
+        phrases_str = ", ".join([f"'{phrase}'" for phrase in generic_greetings_detected])
+        reason_string = f"Generic Greeting Detected: {phrases_str}"
     return (total_points, reason_string)
 
 #Added check_* functions
@@ -287,6 +315,7 @@ def check_money_request(text: str) -> tuple[int, Optional[str]]:
     
     points = 0
     reason_string = None
+    money_request_detected = []
     
     money_request_phrases = [
     "send money",
@@ -312,16 +341,21 @@ def check_money_request(text: str) -> tuple[int, Optional[str]]:
     ]
     
     for phrase in money_request_phrases:
-        if phrase in text:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += MONEY_REQUEST_POINTS
-            reason_string = "The message asks you to send, transfer, or pay money."
-        
+            money_request_detected.append(phrase)
+    
+    if money_request_detected:
+        phrases_str = ", ".join(f"'{phrase}'"for phrase in money_request_detected)
+        reason_string = f"Money Request Detected: {phrases_str}"
+      
     return (points, reason_string)
 
 def check_prize_or_reward(text: str) -> tuple[int, Optional[str]]:
     
     points = 0
     reason_string = None
+    prize_or_reward_detected = []
     
     prize_reward_phrases = [
     "you have won",
@@ -347,9 +381,14 @@ def check_prize_or_reward(text: str) -> tuple[int, Optional[str]]:
     ]
     
     for phrase in prize_reward_phrases:
-        if phrase in text:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += PRIZE_REWARD_POINTS
-            reason_string = "The message claims you have won a prize or reward."
+            prize_or_reward_detected.append(phrase)
+            
+    if prize_or_reward_detected:
+        phrases_str = ", ".join(f"'{phrase}'"for phrase in prize_or_reward_detected)
+        reason_string = f"The message claims you have won a prize or reward: {phrases_str}"
+    
     
     return (points, reason_string)
 
@@ -357,6 +396,7 @@ def check_threats_or_consequences(text: str) -> tuple[int, Optional[str]]:
     
     points = 0
     reason_string = None
+    threats_or_consequences_detected = []
     
     threat_phrases = [
     "legal action",
@@ -380,16 +420,22 @@ def check_threats_or_consequences(text: str) -> tuple[int, Optional[str]]:
     ]
     
     for phrase in threat_phrases:
-        if phrase in text:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += THREAT_POINTS
-            reason_string = "The message contains threats or warnings about negative consequences."
+            threats_or_consequences_detected.append(phrase)
             
+            
+    if threats_or_consequences_detected:
+        phrases_str = ", ".join(f"'{phrase}'" for phrase in threats_or_consequences_detected)
+        reason_string = f"The message contains threats or warnings about negative consequences: {phrases_str}"
+        
     return (points, reason_string)
 
 def check_personal_information_request(text: str) -> tuple[int, Optional[str]]:
     
     points = 0
     reason_string = None
+    personal_info_request_detected = []
     
     personal_info_phrases = [
     "date of birth",
@@ -406,9 +452,13 @@ def check_personal_information_request(text: str) -> tuple[int, Optional[str]]:
     ]
     
     for phrase in personal_info_phrases:
-        if phrase in text:
+        if re.search(rf"\b{re.escape(phrase)}\b", text):
             points += PERSONAL_INFO_POINTS
-            reason_string = "The message asks for personal or identifying information."
+            personal_info_request_detected.append(phrase)
+            
+    if personal_info_request_detected:
+        phrases_str = ", ".join(f"'{phrase}'" for phrase in personal_info_request_detected)
+        reason_string = f"The message asks for personal or identifying information: {phrases_str}"
             
     return (points, reason_string)    
         
@@ -447,4 +497,3 @@ if __name__ == "__main__":
         print(f"Message: {msg}")
         result = check_message(msg)
         print(f"Result: {result}")
-
