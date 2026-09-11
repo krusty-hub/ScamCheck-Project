@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AlertTriangle,
   Check,
@@ -10,6 +10,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { saveScanRecord } from "@/lib/supabase";
 
 type DemoState = "idle" | "analyzing" | "result";
 type RiskLevel = "RED" | "YELLOW" | "GREEN";
@@ -20,41 +21,81 @@ type AnalysisResult = {
   reasons: string[];
 };
 
-export function ScannerDemo({ compact = false }: { compact?: boolean }) {
+export function ScannerDemo({
+  compact = false,
+  onScanComplete,
+  externalQuery,
+}: {
+  compact?: boolean;
+  onScanComplete?: () => void;
+  externalQuery?: string;
+}) {
   const [mode, setMode] = useState<"text" | "url">("text");
   const [value, setValue] = useState("");
   const [state, setState] = useState<DemoState>("idle");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function analyze() {
-  const text = value.trim();
-
-  if (!text) return;
-
-  setState("analyzing");
-  setError(null);
-  setResult(null);
-
-  try {
-    const response = await fetch(
-      `http://127.0.0.1:8000/check_message?text=${encodeURIComponent(text)}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status}`);
+  useEffect(() => {
+    if (externalQuery) {
+      setValue(externalQuery);
+      analyze(externalQuery);
     }
+  }, [externalQuery]);
 
-    const data: AnalysisResult = await response.json();
+  async function analyze(overrideText?: string) {
+    const text = (overrideText ?? value).trim();
 
-    setResult(data);
-    setState("result");
-  } catch (err) {
-  console.error("SCAN ERROR:", err);
-  setError(err instanceof Error ? err.message : String(err));
-  setState("idle");
-}
-}
+    if (!text) return;
+
+    setState("analyzing");
+    setError(null);
+    setResult(null);
+
+    try {
+      const apiUrl = import.meta.env['VITE_API_URL'] || "http://127.0.0.1:8000";
+      const response = await fetch(
+        `${apiUrl}/check_message?text=${encodeURIComponent(text)}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data: AnalysisResult = await response.json();
+
+      // ── ADD THIS: Save the scan to Supabase ──
+      try {
+        const { error: dbError } = await saveScanRecord({
+          inputText: text,
+          result: data.level,
+          riskScore: data.score,
+          detectionType: "HEURISTIC v1.0",
+          metadata: { mode: mode, reasons: data.reasons }
+        });
+
+        // 1. Explicitly throw the Supabase error so the catch block sees it
+        if (dbError) throw dbError;
+
+        // 2. Tell the dashboard to refresh its stats instantly!
+        if (onScanComplete) {
+          onScanComplete();
+        }
+
+      } catch (dbErr) {
+        // Now this will actually log your RLS or missing table errors!
+        console.error("Failed to save scan history to database:", dbErr);
+      }
+      // ──────────────────────────────────────────
+
+      setResult(data);
+      setState("result");
+    } catch (err) {
+      console.error("SCAN ERROR:", err);
+      setError(err instanceof Error ? err.message : String(err));
+      setState("idle");
+    }
+  }
 
   const levelStyles: Record<
     RiskLevel,
@@ -164,7 +205,7 @@ export function ScannerDemo({ compact = false }: { compact?: boolean }) {
           <div className="mt-3 flex items-center justify-end gap-3">
             <Button
               type="button"
-              onClick={analyze}
+              onClick={() => analyze()}
               disabled={!value.trim() || state === "analyzing"}
               className="h-10 shrink-0 px-5"
             >
