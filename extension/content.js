@@ -1,5 +1,5 @@
 // extension/content.js
-var DEBUG = true; 
+var DEBUG = true;
 let debounceTimer = null;
 let extensionValid = true;
 let invalidationPort = null;
@@ -126,7 +126,7 @@ function extractTextFromElement(target) {
 
 function extractDeepText(node) {
   if (!node) return '';
-  
+
   if (node.nodeType === Node.ELEMENT_NODE) {
     const tagName = node.tagName.toLowerCase();
     if (tagName === 'script' || tagName === 'style' || tagName === 'noscript' || node.id === 'scamcheck-widget-container') {
@@ -150,7 +150,7 @@ function extractDeepText(node) {
 function getUniversalPageText() {
   if (!document.body) return '';
   const priorityContainers = [
-    '[role="main"]', '[role="feed"]', '#main', 
+    '[role="main"]', '[role="feed"]', '#main',
     '[data-qa="message_list"]', '.chat-messages', '#canvas'
   ];
 
@@ -247,8 +247,8 @@ function setupDOMObserver() {
     if (pageScanTimer) clearTimeout(pageScanTimer);
     pageScanTimer = setTimeout(scanPageContent, 1000);
   });
-  domObserver.observe(document, { 
-    childList: true, subtree: true, characterData: true, attributes: false 
+  domObserver.observe(document, {
+    childList: true, subtree: true, characterData: true, attributes: false
   });
 }
 
@@ -267,7 +267,7 @@ if (document.readyState === 'loading') {
 
 function highlightThreatsInDOM(textsToHighlight) {
   clearHighlights(); // Clear old highlights first
-  
+
   if (!textsToHighlight || !Array.isArray(textsToHighlight)) return;
 
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
@@ -289,13 +289,13 @@ function highlightThreatsInDOM(textsToHighlight) {
   // Safely replace text with marked spans
   nodesToReplace.forEach(({ node, textToMatch }) => {
     if (!node.parentNode) return; // Might have been modified already
-    
+
     const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(${escapeRegExp(textToMatch)})`, 'gi');
-    
+
     const fragment = document.createDocumentFragment();
     const parts = node.nodeValue.split(regex);
-    
+
     parts.forEach(part => {
       if (part.toLowerCase() === textToMatch.toLowerCase()) {
         const mark = document.createElement('mark');
@@ -307,8 +307,8 @@ function highlightThreatsInDOM(textsToHighlight) {
         fragment.appendChild(document.createTextNode(part));
       }
     });
-    
-    try { node.parentNode.replaceChild(fragment, node); } catch(e) {}
+
+    try { node.parentNode.replaceChild(fragment, node); } catch (e) { }
   });
 }
 
@@ -322,12 +322,20 @@ function clearHighlights() {
   });
 }
 
+function removeWarningWidget() {
+  const widget = document.getElementById('scamcheck-widget-container');
+  if (widget) {
+    widget.remove();
+  }
+  clearHighlights();
+}
+
 function showWarningWidget(resultData) {
   if (!isContextAlive()) return;
   const score = resultData.score || 'N/A';
   const message = resultData.message || 'Suspicious content detected.';
   // Default to empty array if backend doesn't provide reasons yet
-  const reasons = Array.isArray(resultData.reasons) ? resultData.reasons : []; 
+  const reasons = Array.isArray(resultData.reasons) ? resultData.reasons : [];
 
   let widget = document.getElementById('scamcheck-widget-container');
   if (!widget) {
@@ -344,12 +352,12 @@ function showWarningWidget(resultData) {
      will-change: transform;
      `;
     document.body.appendChild(widget);
-    
+
     setupWidgetDrag(widget);
   }
 
   // Generate reasons list HTML if available
-  const reasonsHtml = reasons.length > 0 
+  const reasonsHtml = reasons.length > 0
     ? `<ul style="margin: 8px 0 0 0; padding-left: 20px; font-size: 12px; color: #444;">
          ${reasons.map(r => `<li>${r}</li>`).join('')}
        </ul>`
@@ -404,268 +412,268 @@ function showWarningWidget(resultData) {
     </div>
   `;
 
-// Toggle Logic
-widget.addEventListener('click', (e) => {
+  // Toggle Logic
+  widget.addEventListener('click', (e) => {
 
- // CLICK WARNING ICON → OPEN FULL WARNING
-  const collapsed = e.target.closest('#scamcheck-collapsed') || 
-    (e.target === widget && widget.querySelector('#scamcheck-collapsed')?.style.display !== 'none' ? widget.querySelector('#scamcheck-collapsed') : null);
+    // CLICK WARNING ICON → OPEN FULL WARNING
+    const collapsed = e.target.closest('#scamcheck-collapsed') ||
+      (e.target === widget && widget.querySelector('#scamcheck-collapsed')?.style.display !== 'none' ? widget.querySelector('#scamcheck-collapsed') : null);
 
-  if (collapsed) {
+    if (collapsed) {
 
-    // Ignore click if the icon was dragged
-    if (widget.dataset.dragged === 'true') {
-      widget.dataset.dragged = 'false';
-      return;
-    }
-
-    const expanded = widget.querySelector('#scamcheck-expanded');
-
-    if (expanded) {
-      collapsed.style.display = 'none';
-      expanded.style.display = 'block';
-    }
-
-    return;
-  }
-
-  // CLICK X → CLOSE WARNING
-  const collapseButton = e.target.closest('#scamcheck-collapse-btn');
-
-  if (collapseButton) {
-
-    const expanded = widget.querySelector('#scamcheck-expanded');
-    const collapsedView = widget.querySelector('#scamcheck-collapsed');
-
-    if (expanded && collapsedView) {
-      expanded.style.display = 'none';
-      collapsedView.style.display = 'flex';
-
-      widget.dataset.dragged = 'false';
-    }
-  }
-});
-
- // ---------------------------------------------------------------
- // Smooth Draggable Logic
- // ---------------------------------------------------------------
- // ---------------------------------------------------------------
- // Ultra Smooth Draggable Widget
- // ---------------------------------------------------------------
- function setupWidgetDrag(widget) {
-  let isDragging = false;
-  let hasMoved = false;
-
-  let startX = 0;
-  let startY = 0;
-
-  let initialX = 0;
-  let initialY = 0;
-
-  let currentX = 0;
-  let currentY = 0;
-
-  let animationFrame = null;
-  let activePointerId = null;
-
-  const DRAG_THRESHOLD = 4;
-
-  // -------------------------------------------------------------
-  // POINTER DOWN
-  // -------------------------------------------------------------
-  function onPointerDown(e) {
-    // Only allow left mouse button
-    if (e.pointerType === 'mouse' && e.button !== 0) {
-      return;
-    }
-
-    // Don't start dragging from buttons
-    if (e.target.closest('button')) {
-      return;
-    }
-
-    // Only drag from the collapsed circle
-    // or expanded header
-    const dragTarget =
-      e.target.closest('#scamcheck-collapsed') ||
-      e.target.closest('.scamcheck-drag-handle');
-
-    if (!dragTarget) {
-      return;
-    }
-
-    isDragging = true;
-    hasMoved = false;
-    activePointerId = e.pointerId;
-
-    widget.dataset.dragged = 'false';
-
-    startX = e.clientX;
-    startY = e.clientY;
-
-    // Get current rendered position
-    const rect = widget.getBoundingClientRect();
-
-    initialX = rect.left;
-    initialY = rect.top;
-
-    currentX = initialX;
-    currentY = initialY;
-
-    // Convert from right/bottom positioning
-    // to left/top positioning ONCE.
-    widget.style.right = 'auto';
-    widget.style.bottom = 'auto';
-    widget.style.left = `${initialX}px`;
-    widget.style.top = `${initialY}px`;
-
-    // Reset previous transform
-    widget.style.transform = 'translate3d(0, 0, 0)';
-
-    // Prevent text selection while dragging
-    document.body.style.userSelect = 'none';
-
-    // Keep receiving pointer events even if cursor
-    // leaves the widget.
-    try {
-      widget.setPointerCapture(e.pointerId);
-    } catch (err) {}
-
-    // IMPORTANT:
-    // Do NOT call preventDefault() here.
-    // The browser must still be able to generate
-    // the normal click event.
-  }
-
-  // -------------------------------------------------------------
-  // POINTER MOVE
-  // -------------------------------------------------------------
-  function onPointerMove(e) {
-    if (!isDragging || e.pointerId !== activePointerId) {
-      return;
-    }
-
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-
-    // -----------------------------------------------------------
-    // CLICK VS DRAG
-    // -----------------------------------------------------------
-    if (!hasMoved) {
-      if (
-        Math.abs(dx) <= DRAG_THRESHOLD &&
-        Math.abs(dy) <= DRAG_THRESHOLD
-      ) {
+      // Ignore click if the icon was dragged
+      if (widget.dataset.dragged === 'true') {
+        widget.dataset.dragged = 'false';
         return;
       }
 
-      hasMoved = true;
-      widget.dataset.dragged = 'true';
-    }
+      const expanded = widget.querySelector('#scamcheck-expanded');
 
-    // -----------------------------------------------------------
-    // BOUNDARY CALCULATION
-    // -----------------------------------------------------------
-    const widgetWidth = widget.offsetWidth;
-    const widgetHeight = widget.offsetHeight;
-
-    const maxX = Math.max(0, window.innerWidth - widgetWidth);
-    const maxY = Math.max(0, window.innerHeight - widgetHeight);
-
-    currentX = Math.max(
-      0,
-      Math.min(initialX + dx, maxX)
-    );
-
-    currentY = Math.max(
-      0,
-      Math.min(initialY + dy, maxY)
-    );
-
-    // -----------------------------------------------------------
-    // GPU-ACCELERATED MOVEMENT
-    // -----------------------------------------------------------
-    if (animationFrame !== null) {
-      return;
-    }
-
-    animationFrame = requestAnimationFrame(() => {
-      const moveX = currentX - initialX;
-      const moveY = currentY - initialY;
-
-      widget.style.transform =
-        `translate3d(${moveX}px, ${moveY}px, 0)`;
-
-      animationFrame = null;
-    });
-  }
-
-  // -------------------------------------------------------------
-  // POINTER UP
-  // -------------------------------------------------------------
-  function onPointerUp(e) {
-    if (!isDragging || e.pointerId !== activePointerId) {
-      return;
-    }
-
-    isDragging = false;
-
-    document.body.style.userSelect = '';
-
-    // Save final position
-    widget.style.left = `${currentX}px`;
-    widget.style.top = `${currentY}px`;
-
-    // Remove temporary transform
-    widget.style.transform = 'translate3d(0, 0, 0)';
-
-    if (animationFrame !== null) {
-      cancelAnimationFrame(animationFrame);
-      animationFrame = null;
-    }
-
-    try {
-      if (widget.hasPointerCapture(e.pointerId)) {
-        widget.releasePointerCapture(e.pointerId);
+      if (expanded) {
+        collapsed.style.display = 'none';
+        expanded.style.display = 'block';
       }
-    } catch (err) {}
 
-    activePointerId = null;
-  }
-
-  // -------------------------------------------------------------
-  // POINTER CANCEL
-  // -------------------------------------------------------------
-  function onPointerCancel(e) {
-    if (!isDragging || e.pointerId !== activePointerId) {
       return;
     }
 
-    isDragging = false;
+    // CLICK X → CLOSE WARNING
+    const collapseButton = e.target.closest('#scamcheck-collapse-btn');
 
-    document.body.style.userSelect = '';
+    if (collapseButton) {
 
-    if (animationFrame !== null) {
-      cancelAnimationFrame(animationFrame);
-      animationFrame = null;
+      const expanded = widget.querySelector('#scamcheck-expanded');
+      const collapsedView = widget.querySelector('#scamcheck-collapsed');
+
+      if (expanded && collapsedView) {
+        expanded.style.display = 'none';
+        collapsedView.style.display = 'flex';
+
+        widget.dataset.dragged = 'false';
+      }
+    }
+  });
+
+  // ---------------------------------------------------------------
+  // Smooth Draggable Logic
+  // ---------------------------------------------------------------
+  // ---------------------------------------------------------------
+  // Ultra Smooth Draggable Widget
+  // ---------------------------------------------------------------
+  function setupWidgetDrag(widget) {
+    let isDragging = false;
+    let hasMoved = false;
+
+    let startX = 0;
+    let startY = 0;
+
+    let initialX = 0;
+    let initialY = 0;
+
+    let currentX = 0;
+    let currentY = 0;
+
+    let animationFrame = null;
+    let activePointerId = null;
+
+    const DRAG_THRESHOLD = 4;
+
+    // -------------------------------------------------------------
+    // POINTER DOWN
+    // -------------------------------------------------------------
+    function onPointerDown(e) {
+      // Only allow left mouse button
+      if (e.pointerType === 'mouse' && e.button !== 0) {
+        return;
+      }
+
+      // Don't start dragging from buttons
+      if (e.target.closest('button')) {
+        return;
+      }
+
+      // Only drag from the collapsed circle
+      // or expanded header
+      const dragTarget =
+        e.target.closest('#scamcheck-collapsed') ||
+        e.target.closest('.scamcheck-drag-handle');
+
+      if (!dragTarget) {
+        return;
+      }
+
+      isDragging = true;
+      hasMoved = false;
+      activePointerId = e.pointerId;
+
+      widget.dataset.dragged = 'false';
+
+      startX = e.clientX;
+      startY = e.clientY;
+
+      // Get current rendered position
+      const rect = widget.getBoundingClientRect();
+
+      initialX = rect.left;
+      initialY = rect.top;
+
+      currentX = initialX;
+      currentY = initialY;
+
+      // Convert from right/bottom positioning
+      // to left/top positioning ONCE.
+      widget.style.right = 'auto';
+      widget.style.bottom = 'auto';
+      widget.style.left = `${initialX}px`;
+      widget.style.top = `${initialY}px`;
+
+      // Reset previous transform
+      widget.style.transform = 'translate3d(0, 0, 0)';
+
+      // Prevent text selection while dragging
+      document.body.style.userSelect = 'none';
+
+      // Keep receiving pointer events even if cursor
+      // leaves the widget.
+      try {
+        widget.setPointerCapture(e.pointerId);
+      } catch (err) { }
+
+      // IMPORTANT:
+      // Do NOT call preventDefault() here.
+      // The browser must still be able to generate
+      // the normal click event.
     }
 
-    try {
-      if (widget.hasPointerCapture(e.pointerId)) {
-        widget.releasePointerCapture(e.pointerId);
+    // -------------------------------------------------------------
+    // POINTER MOVE
+    // -------------------------------------------------------------
+    function onPointerMove(e) {
+      if (!isDragging || e.pointerId !== activePointerId) {
+        return;
       }
-    } catch (err) {}
 
-    activePointerId = null;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      // -----------------------------------------------------------
+      // CLICK VS DRAG
+      // -----------------------------------------------------------
+      if (!hasMoved) {
+        if (
+          Math.abs(dx) <= DRAG_THRESHOLD &&
+          Math.abs(dy) <= DRAG_THRESHOLD
+        ) {
+          return;
+        }
+
+        hasMoved = true;
+        widget.dataset.dragged = 'true';
+      }
+
+      // -----------------------------------------------------------
+      // BOUNDARY CALCULATION
+      // -----------------------------------------------------------
+      const widgetWidth = widget.offsetWidth;
+      const widgetHeight = widget.offsetHeight;
+
+      const maxX = Math.max(0, window.innerWidth - widgetWidth);
+      const maxY = Math.max(0, window.innerHeight - widgetHeight);
+
+      currentX = Math.max(
+        0,
+        Math.min(initialX + dx, maxX)
+      );
+
+      currentY = Math.max(
+        0,
+        Math.min(initialY + dy, maxY)
+      );
+
+      // -----------------------------------------------------------
+      // GPU-ACCELERATED MOVEMENT
+      // -----------------------------------------------------------
+      if (animationFrame !== null) {
+        return;
+      }
+
+      animationFrame = requestAnimationFrame(() => {
+        const moveX = currentX - initialX;
+        const moveY = currentY - initialY;
+
+        widget.style.transform =
+          `translate3d(${moveX}px, ${moveY}px, 0)`;
+
+        animationFrame = null;
+      });
+    }
+
+    // -------------------------------------------------------------
+    // POINTER UP
+    // -------------------------------------------------------------
+    function onPointerUp(e) {
+      if (!isDragging || e.pointerId !== activePointerId) {
+        return;
+      }
+
+      isDragging = false;
+
+      document.body.style.userSelect = '';
+
+      // Save final position
+      widget.style.left = `${currentX}px`;
+      widget.style.top = `${currentY}px`;
+
+      // Remove temporary transform
+      widget.style.transform = 'translate3d(0, 0, 0)';
+
+      if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }
+
+      try {
+        if (widget.hasPointerCapture(e.pointerId)) {
+          widget.releasePointerCapture(e.pointerId);
+        }
+      } catch (err) { }
+
+      activePointerId = null;
+    }
+
+    // -------------------------------------------------------------
+    // POINTER CANCEL
+    // -------------------------------------------------------------
+    function onPointerCancel(e) {
+      if (!isDragging || e.pointerId !== activePointerId) {
+        return;
+      }
+
+      isDragging = false;
+
+      document.body.style.userSelect = '';
+
+      if (animationFrame !== null) {
+        cancelAnimationFrame(animationFrame);
+        animationFrame = null;
+      }
+
+      try {
+        if (widget.hasPointerCapture(e.pointerId)) {
+          widget.releasePointerCapture(e.pointerId);
+        }
+      } catch (err) { }
+
+      activePointerId = null;
+    }
+
+    // -------------------------------------------------------------
+    // EVENT LISTENERS
+    // -------------------------------------------------------------
+    widget.addEventListener('pointerdown', onPointerDown);
+    widget.addEventListener('pointermove', onPointerMove);
+    widget.addEventListener('pointerup', onPointerUp);
+    widget.addEventListener('pointercancel', onPointerCancel);
   }
-
-  // -------------------------------------------------------------
-  // EVENT LISTENERS
-  // -------------------------------------------------------------
-  widget.addEventListener('pointerdown', onPointerDown);
-  widget.addEventListener('pointermove', onPointerMove);
-  widget.addEventListener('pointerup', onPointerUp);
-  widget.addEventListener('pointercancel', onPointerCancel);
- }
 }
- watchForInvalidation();
+watchForInvalidation();
