@@ -1,12 +1,12 @@
-# ScamCheck
+# Scamlex
 
-ScamCheck is a scam detection and online safety platform designed to help users identify potentially fraudulent messages, links, and other suspicious content.
+Scamlex is a scam detection and online safety platform designed to help users identify potentially fraudulent messages, links, and other suspicious content.
 
 The project analyzes text and URLs for common scam indicators such as urgent requests, suspicious links, requests for sensitive information, money requests, fake rewards, threats, and other deceptive patterns.
 
 ## What the Project Does
 
-ScamCheck provides users with tools to:
+Scamlex provides users with tools to:
 
 * Scan messages and text for possible scam indicators.
 * Check suspicious links and URLs.
@@ -28,7 +28,7 @@ A Python-based backend responsible for the core scam detection system, API endpo
 
 ### Chrome Extension
 
-The ScamCheck Guard browser extension provides real-time protection while browsing by analyzing suspicious content on webpages.
+The Scamlex Guard browser extension provides real-time protection while browsing by analyzing suspicious content on webpages.
 
 ### Database
 
@@ -45,6 +45,6 @@ A SQLite database is used to store scam detection patterns and application data.
 
 ## Purpose
 
-The main goal of ScamCheck is to make it easier for people to recognize online scams before they interact with suspicious messages, links, or websites.
+The main goal of Scamlex is to make it easier for people to recognize online scams before they interact with suspicious messages, links, or websites.
 
 > **Stay aware. Stay protected. Check before you trust.**
